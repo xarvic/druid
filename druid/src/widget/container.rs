@@ -138,6 +138,15 @@ impl<T: Data> Widget<T> for Container<T> {
     fn child(&self) -> Option<&dyn Widget<T>> {
         Some(self.inner.widget())
     }
+
+    fn leaf(&self) -> Option<&dyn Widget<T>> {
+        self.inner.widget().leaf()
+    }
+
+    fn leaf_mut(&mut self) -> Option<&mut dyn Widget<T>> {
+        self.inner.widget_mut().leaf_mut()
+    }
+
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
         self.inner.event(ctx, event, data, env);
     }

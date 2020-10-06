@@ -130,9 +130,23 @@ impl<T> SizedBox<T> {
 }
 
 impl<T: Data> Widget<T> for SizedBox<T> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    fn leaf(&self) -> Option<&dyn Widget<T>> {
+        match self.inner.as_ref() {
+            Some(inner) => inner.leaf(),
+            None => Some(self),
+        }
     }
+
+    fn leaf_mut(&mut self) -> Option<&mut dyn Widget<T>> {
+        if self.inner.is_none() {
+            return Some(self);
+        }
+        self.inner.as_mut().unwrap().leaf_mut()
+    }
+
+    //fn as_any(&self) -> &dyn std::any::Any {
+    //self
+    //}
     fn child(&self) -> Option<&dyn Widget<T>> {
         match self.inner.as_ref() {
             Some(inner) => Some(inner),

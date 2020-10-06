@@ -82,8 +82,15 @@ impl<T: Data> Align<T> {
 }
 
 impl<T: Data> Widget<T> for Align<T> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    //fn as_any(&self) -> &dyn std::any::Any {
+    //self
+    //}
+
+    fn leaf(&self) -> Option<&dyn Widget<T>> {
+        self.child.widget().leaf()
+    }
+    fn leaf_mut(&mut self) -> Option<&mut dyn Widget<T>> {
+        self.child.widget_mut().leaf_mut()
     }
 
     fn child(&self) -> Option<&dyn Widget<T>> {

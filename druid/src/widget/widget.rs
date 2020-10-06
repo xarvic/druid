@@ -51,6 +51,11 @@ use super::prelude::*;
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub struct WidgetId(NonZeroU64);
 
+pub trait AsAny: 'static {
+    fn as_any_t(&self) -> &dyn std::any::Any;
+    fn as_any_mut_t(&mut self) -> &mut dyn std::any::Any;
+}
+
 /// The trait implemented by all widgets.
 ///
 /// All appearance and behavior for a widget is encapsulated in an
@@ -90,7 +95,7 @@ pub struct WidgetId(NonZeroU64);
 /// [`Data`]: trait.Data.html
 /// [`Env`]: struct.Env.html
 /// [`WidgetPod`]: struct.WidgetPod.html
-pub trait Widget<T>: 'static {
+pub trait Widget<T>: AsAny {
     /// Handle an event.
     ///
     /// A number of different events (in the [`Event`] enum) are handled in this
@@ -204,8 +209,23 @@ pub trait Widget<T>: 'static {
         None
     }
 
+    /// If this widget is a single-child container, return the child.
+    fn child_mut(&mut self) -> Option<&mut dyn Widget<T>> {
+        None
+    }
+
     /// Return a dynamic reference to this widget.
-    fn as_any(&self) -> &dyn Any;
+    fn as_any(&self) -> &dyn Any {
+        <Self as AsAny>::as_any_t(self)
+    }
+
+    fn leaf(&self) -> Option<&dyn Widget<T>> {
+        None
+    }
+
+    fn leaf_mut(&mut self) -> Option<&mut dyn Widget<T>> {
+        None
+    }
 }
 
 /// A helper trait for dynamically accessing a child that is wrapped in
@@ -220,8 +240,8 @@ trait AnyWidget<T: 'static>: Widget<T> {
 
         let mut child = self.child();
 
+        eprintln!("looking for '{}'", std::any::type_name::<C>());
         loop {
-            //eprintln!("child is {}", std::any::type_name)
             match child {
                 None => return None,
                 Some(inner) => {
@@ -233,6 +253,11 @@ trait AnyWidget<T: 'static>: Widget<T> {
                 }
             }
         }
+    }
+
+    fn downcast_child_mut<C: AnyWidget<T>>(&mut self) -> Option<&mut C> {
+        self.leaf_mut()
+            .and_then(|w| w.as_any_mut_t().downcast_mut::<C>())
     }
 }
 
@@ -273,9 +298,27 @@ impl WidgetId {
     }
 }
 
+impl<T: 'static> AsAny for T {
+    fn as_any_t(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut_t(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
 impl<T: 'static> Widget<T> for Box<dyn Widget<T>> {
     fn as_any(&self) -> &dyn std::any::Any {
         self.deref().as_any()
+    }
+
+    fn leaf(&self) -> Option<&dyn Widget<T>> {
+        self.deref().leaf()
+    }
+
+    fn leaf_mut(&mut self) -> Option<&mut dyn Widget<T>> {
+        self.deref_mut().leaf_mut()
     }
 
     fn child(&self) -> Option<&dyn Widget<T>> {
@@ -331,5 +374,8 @@ mod tests {
         // get an intermediate widget:
         assert!(widget.downcast_child::<Padding<f64>>().is_some());
         assert!(widget.downcast_child::<Align<f64>>().is_some());
+
+        let mut widget = widget;
+        assert!(widget.downcast_child_mut::<Slider>().is_some());
     }
 }

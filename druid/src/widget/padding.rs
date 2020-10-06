@@ -73,9 +73,16 @@ impl<T: Data> Padding<T> {
 }
 
 impl<T: Data> Widget<T> for Padding<T> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    fn leaf(&self) -> Option<&dyn Widget<T>> {
+        self.child.widget().leaf()
     }
+    fn leaf_mut(&mut self) -> Option<&mut dyn Widget<T>> {
+        self.child.widget_mut().leaf_mut()
+    }
+
+    //fn as_any(&self) -> &dyn std::any::Any {
+    //self
+    //}
     fn child(&self) -> Option<&dyn Widget<T>> {
         Some(self.child.widget())
     }
