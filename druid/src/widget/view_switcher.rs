@@ -62,7 +62,7 @@ impl<T: Data, U: Data> Widget<T> for ViewSwitcher<T, U> {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
-        if let LifeCycle::WidgetAdded = event {
+        if let LifeCycle::WidgetAdded{..} = event {
             let child_id = (self.child_picker)(data, env);
             self.active_child = Some(WidgetPod::new((self.child_builder)(&child_id, data, env)));
             self.active_child_id = Some(child_id);

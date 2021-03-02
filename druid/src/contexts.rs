@@ -273,6 +273,17 @@ impl_context_method!(
         pub fn has_focus(&self) -> bool {
             self.widget_state.has_focus
         }
+
+        /// The (tree) disabled status of a widget.
+        ///
+        /// Returns `true` ìf this widget and all of its ancestors are enabled.
+        /// If the value is `false` the widget will not receive most of the events.
+        ///
+        /// To check if this specific widget wanted to be disabled use [`is_set_diabled`]
+        //TODO: document which events are affected
+        pub fn is_enabled(&self) -> bool {
+            self.widget_state.is_enabled()
+        }
     }
 );
 
@@ -314,6 +325,30 @@ impl_context_method!(EventCtx<'_, '_>, UpdateCtx<'_, '_>, {
     /// [`set_cursor`]: EventCtx::set_cursor
     pub fn clear_cursor(&mut self) {
         self.widget_state.cursor_change = CursorChange::Default;
+    }
+
+    /// The disabled status of a widget.
+    ///
+    /// The widget can still be disabled if this value is `false`, use [`is_enabled`] to check if
+    /// the widget is currently enabled.
+    ///
+    /// If the value is `true` this widget will stay disabled at least until [`EventCtx::set_enabled`]
+    /// or [`UpdateCtx::set_enabled`] is called.
+    ///
+    /// [`is_enabled`]: #method.is_enabled
+    /// [`EventCtx::set_enabled`]: struct.EventCtx.html#method.set_enabled
+    /// [`UpdateCtx::set_enabled`]: struct.LifeCycleCtx.html#method.set_enabled
+    pub fn is_set_disabled(&self) -> bool {
+        !self.widget_state.set_enabled
+    }
+
+    /// Sets the enabled state of this widget (see: [`is_set_disabled`]).
+    ///
+    /// To check if if this widget is currently enabled use [`is_enabled`].
+    /// [`is_enabled`]: #method.is_enabled
+    /// [`is_set_disabled`]: #method.is_set_disabled
+    pub fn set_enabled(&mut self, enabled: bool) {
+        self.widget_state.new_enabled = enabled;
     }
 });
 
@@ -670,6 +705,22 @@ impl LifeCycleCtx<'_, '_> {
     /// [`EventCtx::is_focused`]: struct.EventCtx.html#method.is_focused
     pub fn register_for_focus(&mut self) {
         self.widget_state.focus_chain.push(self.widget_id());
+    }
+
+    /// Sets the enabled state of a widget to false.
+    ///
+    /// This should only be called in response to a [`LifeCycle::WidgetAdded`] event, to ensure, that
+    /// the widget is disabled before the first call to event. See [`is_enabled`] and [`is_set_disabled`].
+    ///
+    /// If a widget decides to call this method it should also use
+    /// [`LifeCycle::WidgetAdded`]{enabled_initially: `false`} as a lifecycle-event for all of its children.
+    ///
+    /// [`LifeCycle::WidgetAdded`]: enum.Lifecycle.html#variant.WidgetAdded
+    /// [`is_enabled`]: #method.is_enabled
+    /// [`is_set_disabled`]: #method.is_set_disabled
+    pub fn set_disabled_initially(&mut self) {
+        self.widget_state.new_enabled = false;
+        self.widget_state.set_enabled = false;
     }
 }
 

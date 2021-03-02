@@ -415,18 +415,20 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
         self.suppress_adjust_hscroll = false;
         match event {
             Event::MouseDown(mouse) => {
-                ctx.request_focus();
-                ctx.set_active(true);
-                let mut mouse = mouse.clone();
-                mouse.pos += Vec2::new(self.hscroll_offset - self.alignment_offset, 0.0);
+                if ctx.is_enabled() {
+                    ctx.request_focus();
+                    ctx.set_active(true);
+                    let mut mouse = mouse.clone();
+                    mouse.pos += Vec2::new(self.hscroll_offset - self.alignment_offset, 0.0);
 
-                if !mouse.focus {
-                    self.was_focused_from_click = true;
-                    self.reset_cursor_blink(ctx.request_timer(CURSOR_BLINK_DURATION));
-                    self.editor.click(&mouse, data);
+                    if !mouse.focus {
+                        self.was_focused_from_click = true;
+                        self.reset_cursor_blink(ctx.request_timer(CURSOR_BLINK_DURATION));
+                        self.editor.click(&mouse, data);
+                    }
+
+                    ctx.request_paint();
                 }
-
-                ctx.request_paint();
             }
             Event::MouseMove(mouse) => {
                 let mut mouse = mouse.clone();
@@ -492,7 +494,7 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
         match event {
-            LifeCycle::WidgetAdded => {
+            LifeCycle::WidgetAdded{..} => {
                 ctx.register_for_focus();
                 self.editor.set_text(data.to_owned());
                 self.editor.rebuild_if_needed(ctx.text(), env);
@@ -819,7 +821,7 @@ impl<T: Data> Widget<T> for ValueTextBox<T> {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
-        if let LifeCycle::WidgetAdded = event {
+        if let LifeCycle::WidgetAdded{..} = event {
             self.buffer = self.formatter.format(data);
             self.old_buffer = self.buffer.clone();
         }

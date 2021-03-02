@@ -368,6 +368,13 @@ impl<T> ChildWidget<T> {
             params,
         }
     }
+
+    fn boxed(child: Box<dyn Widget<T> + 'static>, params: FlexParams) -> Self {
+        ChildWidget {
+            widget: WidgetPod::new(child),
+            params,
+        }
+    }
 }
 
 impl<T: Data> Flex<T> {
@@ -440,6 +447,14 @@ impl<T: Data> Flex<T> {
         self
     }
 
+    /// Builder-style variant of `add_boxed_child`.
+    ///
+    /// Convenient for assembling a group of widgets in a single expression.
+    pub fn with_boxed_child(mut self, child: Box<dyn Widget<T> + 'static>) -> Self {
+        self.add_boxed_flex_child(child, 0.0);
+        self
+    }
+
     /// Builder-style method to add a flexible child to the container.
     ///
     /// This method is used when you need more control over the behaviour
@@ -472,6 +487,49 @@ impl<T: Data> Flex<T> {
         params: impl Into<FlexParams>,
     ) -> Self {
         self.add_flex_child(child, params);
+        self
+    }
+
+    /// Builder-style method to add a flexible child to the container.
+    ///
+    /// This method is used when you need more control over the behaviour
+    /// of the widget you are adding. In the general case, this likely
+    /// means giving that child a 'flex factor', but it could also mean
+    /// giving the child a custom [`CrossAxisAlignment`], or a combination
+    /// of the two.
+    ///
+    /// This function takes a child widget and [`FlexParams`]; importantly
+    /// you can pass in a float as your [`FlexParams`] in most cases.
+    ///
+    /// For the non-builder varient, see [`add_flex_child`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use druid::widget::{Flex, FlexParams, Label, Slider, CrossAxisAlignment};
+    ///
+    /// let modify = true;
+    ///
+    /// let widget = if modify {
+    ///     Box::new(Slider::new())
+    /// } else {
+    ///     Box::new(Label::dynamic(|data: &f64|data.to_string()))
+    /// };
+    ///
+    /// let my_row = Flex::row()
+    ///     .with_boxed_flex_child(widget, 1.0)
+    ///     .with_flex_child(Slider::new(), FlexParams::new(1.0, CrossAxisAlignment::End));
+    /// ```
+    ///
+    /// [`FlexParams`]: struct.FlexParams.html
+    /// [`add_boxed_flex_child`]: #method.add_boxed_flex_child
+    /// [`CrossAxisAlignment`]: enum.CrossAxisAlignment.html
+    pub fn with_boxed_flex_child(
+        mut self,
+        child: Box<dyn Widget<T> + 'static>,
+        params: impl Into<FlexParams>,
+    ) -> Self {
+        self.add_boxed_flex_child(child, params);
         self
     }
 
@@ -530,6 +588,15 @@ impl<T: Data> Flex<T> {
         self.add_flex_child(child, 0.0);
     }
 
+    /// Add a non-flex boxed child widget.
+    ///
+    /// See also [`with_boxed_child`].
+    ///
+    /// [`with_boxed_child`]: #method.with_boxed_child
+    pub fn add_boxed_child(&mut self, child: Box<dyn Widget<T> + 'static>) {
+        self.add_boxed_flex_child(child, 0.0);
+    }
+
     /// Add a flexible child widget.
     ///
     /// This method is used when you need more control over the behaviour
@@ -561,6 +628,49 @@ impl<T: Data> Flex<T> {
         params: impl Into<FlexParams>,
     ) {
         let child = ChildWidget::new(child, params.into());
+        self.children.push(child);
+    }
+
+    /// Add a flexible boxed child widget.
+    ///
+    /// This method is used when you need more control over the behaviour
+    /// of the widget you are adding. In the general case, this likely
+    /// means giving that child a 'flex factor', but it could also mean
+    /// giving the child a custom [`CrossAxisAlignment`], or a combination
+    /// of the two.
+    ///
+    /// This function takes a child widget and [`FlexParams`]; importantly
+    /// you can pass in a float as your [`FlexParams`] in most cases.
+    ///
+    /// For the builder-style varient, see [`with_boxed_flex_child`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use druid::widget::{Flex, FlexParams, Label, Slider, CrossAxisAlignment};
+    ///
+    /// let modify = true;
+    ///
+    /// let widget = if modify {
+    ///     Box::new(Slider::new())
+    /// } else {
+    ///     Box::new(Label::dynamic(|data: &f64|data.to_string()))
+    /// };
+    ///
+    ///
+    /// let mut my_row = Flex::row();
+    /// my_row.add_boxed_flex_child(widget, 1.0);
+    /// my_row.add_flex_child(Slider::new(), FlexParams::new(1.0, CrossAxisAlignment::End));
+    /// ```
+    ///
+    /// [`FlexParams`]: struct.FlexParams.html
+    /// [`with_boxed_flex_child`]: #method.with_boxed_flex_child
+    pub fn add_boxed_flex_child(
+        &mut self,
+        child: Box<dyn Widget<T> + 'static>,
+        params: impl Into<FlexParams>,
+    ) {
+        let child = ChildWidget::boxed(child, params.into());
         self.children.push(child);
     }
 

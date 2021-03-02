@@ -104,6 +104,12 @@ pub(crate) struct WidgetState {
     pub(crate) viewport_offset: Vec2,
 
     // TODO: consider using bitflags for the booleans.
+    pub(crate) set_enabled: bool,
+
+    pub(crate) new_enabled: bool,
+
+    pub(crate) tree_enabled: bool,
+
     pub(crate) is_hot: bool,
 
     pub(crate) is_active: bool,
@@ -579,6 +585,38 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
         }
     }
 
+    fn update_enabled(&mut self, parent: &mut WidgetState, context: &mut ContextState, data: &T, env: &Env) {
+        let was_enabled = self.state.is_enabled();
+
+        self.state.set_enabled = self.state.new_enabled;
+
+        if self.state.is_enabled() != was_enabled {
+
+            if !self.state.focus_chain.is_empty() {
+                //Adding or removing elements from the focus chain
+                parent.children_changed = true;
+            }
+
+            if !self.state.is_enabled() && self.state.has_focus {
+                // This may get overwritten by a child, which is ok. This only ensures that the
+                // focus is changed in some way after the focus chain is updated. Therefore the
+                // disabled widget which holds the focus, will lose it.
+                self.state.request_focus = Some(FocusChange::Resign);
+            }
+
+            let event = LifeCycle::EnabledChanged(self.state.is_enabled());
+
+            let mut ctx = LifeCycleCtx {
+                widget_state: &mut self.state,
+                state: context,
+            };
+
+            self.inner.lifecycle(&mut ctx, &event, data, env);
+
+            //We dont need to merge the state since this method is only called from methods which do this.
+        }
+    }
+
     /// Execute the closure with this widgets `EventCtx`.
     #[cfg(feature = "crochet")]
     pub fn with_event_context<F>(&mut self, parent_ctx: &mut EventCtx, mut fun: F)
@@ -808,6 +846,8 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
 
                     inner_ctx.widget_state.has_active |= inner_ctx.widget_state.is_active;
                     ctx.is_handled |= inner_ctx.is_handled;
+
+                    self.update_enabled(&mut ctx.widget_state, &mut ctx.state, data, env);
                 }
             }
 
@@ -884,7 +924,9 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
                     // WidgetAdded or in case we were already created
                     // we just pass this event down
                     if self.old_data.is_none() {
-                        self.lifecycle(ctx, &LifeCycle::WidgetAdded, data, env);
+                        let enabled = self.state.is_enabled();
+
+                        self.lifecycle(ctx, &LifeCycle::WidgetAdded{initially_enabled: enabled}, data, env);
                         return;
                     } else {
                         if self.state.children_changed {
@@ -939,11 +981,13 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
                     true
                 }
             },
-            LifeCycle::WidgetAdded => {
+            LifeCycle::WidgetAdded{initially_enabled} => {
                 assert!(self.old_data.is_none());
 
                 self.old_data = Some(data.clone());
                 self.env = Some(env.clone());
+
+                self.state.tree_enabled = *initially_enabled;
 
                 true
             }
@@ -967,6 +1011,13 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
                 // Descendants don't inherit focus, so don't recurse.
                 false
             }
+            LifeCycle::EnabledChanged(enabled) => {
+                let was_enabled = self.state.is_enabled();
+
+                self.state.tree_enabled = *enabled;
+
+                self.state.is_enabled() != was_enabled
+            }
         };
 
         let mut child_ctx = LifeCycleCtx {
@@ -986,10 +1037,13 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
 
         // we need to (re)register children in case of one of the following events
         match event {
-            LifeCycle::WidgetAdded | LifeCycle::Internal(InternalLifeCycle::RouteWidgetAdded) => {
+            LifeCycle::WidgetAdded{..} | LifeCycle::Internal(InternalLifeCycle::RouteWidgetAdded) => {
                 self.state.children_changed = false;
                 ctx.widget_state.children = ctx.widget_state.children.union(self.state.children);
-                ctx.widget_state.focus_chain.extend(&self.state.focus_chain);
+
+                if self.state.is_enabled() {
+                    ctx.widget_state.focus_chain.extend(&self.state.focus_chain);
+                }
                 ctx.register_child(self.id());
             }
             _ => (),
@@ -1053,6 +1107,8 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
         self.old_data = Some(data.clone());
         self.env = Some(env.clone());
 
+        self.update_enabled(&mut ctx.widget_state, &mut ctx.state, data, env);
+
         self.state.request_update = false;
         ctx.widget_state.merge_up(&mut self.state);
     }
@@ -1091,6 +1147,9 @@ impl WidgetState {
             paint_insets: Insets::ZERO,
             invalid: Region::EMPTY,
             viewport_offset: Vec2::ZERO,
+            set_enabled: true,
+            new_enabled: true,
+            tree_enabled: true,
             baseline_offset: 0.0,
             is_hot: false,
             needs_layout: false,
@@ -1193,6 +1252,10 @@ impl WidgetState {
 
     pub(crate) fn window_origin(&self) -> Point {
         self.parent_window_origin + self.origin.to_vec2() - self.viewport_offset
+    }
+
+    pub(crate) fn is_enabled(&self) -> bool {
+        self.set_enabled && self.tree_enabled
     }
 }
 

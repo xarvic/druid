@@ -23,6 +23,7 @@ use crate::widget::Scroll;
 use crate::{
     Color, Data, Env, EventCtx, Insets, KeyOrValue, Lens, LifeCycleCtx, UnitPoint, Widget,
 };
+use crate::widget::enabled_if::EnabledIf;
 
 /// A trait that provides extra methods for combining `Widget`s.
 pub trait WidgetExt<T: Data>: Widget<T> + Sized + 'static {
@@ -226,6 +227,11 @@ pub trait WidgetExt<T: Data>: Widget<T> + Sized + 'static {
     /// [`DEBUG_WIDGET`]: struct.Env.html#associatedconstant.DEBUG_WIDGET
     fn debug_widget(self) -> EnvScope<T, Self> {
         EnvScope::new(|env, _| env.set(Env::DEBUG_WIDGET, true), self)
+    }
+
+    /// enable the widget only when the given closure returns true for the current data and env
+    fn enable_if(self, enable: impl Fn(&T, &Env) -> bool + 'static) -> EnabledIf<T, Self> {
+        EnabledIf::new(self, enable)
     }
 
     /// Wrap this widget in a [`LensWrap`] widget for the provided [`Lens`].

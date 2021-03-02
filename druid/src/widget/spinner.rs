@@ -79,7 +79,7 @@ impl<T: Data> Widget<T> for Spinner {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, _data: &T, _env: &Env) {
-        if let LifeCycle::WidgetAdded = event {
+        if let LifeCycle::WidgetAdded{..} = event {
             ctx.request_anim_frame();
             ctx.request_paint();
         }

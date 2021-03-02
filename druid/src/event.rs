@@ -245,7 +245,16 @@ pub enum LifeCycle {
     /// [`LifeCycleCtx::register_child`]: struct.LifeCycleCtx.html#method.register_child
     /// [`WidgetPod`]: struct.WidgetPod.html
     /// [`LifeCycleCtx::register_for_focus`]: struct.LifeCycleCtx.html#method.register_for_focus
-    WidgetAdded,
+    WidgetAdded{
+        /// The widget is enabled at when it is added. This field can be mostly ignored. You can
+        /// always use [`LifeCycleCtx::is_enabled`] instead.
+        ///
+        /// See [`LifeCycleCtx::set_disabled_initially`].
+        ///
+        /// [`LifeCycleCtx::is_enabled`]: struct.LifeCycleCtx.html#method.is_enabled
+        /// [`LifeCycleCtx::set_disabled_initially`]: struct.LifeCycleCtx.html#method.set_disabled_initially
+        initially_enabled: bool
+    },
     /// Called when the [`Size`] of the widget changes.
     ///
     /// This will be called after [`Widget::layout`], if the [`Size`] returned
@@ -273,6 +282,8 @@ pub enum LifeCycle {
     ///
     /// [`EventCtx::is_focused`]: struct.EventCtx.html#method.is_focused
     FocusChanged(bool),
+    ///
+    EnabledChanged(bool),
     /// Internal druid lifecycle event.
     ///
     /// This should always be passed down to descendant [`WidgetPod`]s.
@@ -394,7 +405,7 @@ impl LifeCycle {
     /// (for example the hidden tabs in a tabs widget).
     pub fn should_propagate_to_hidden(&self) -> bool {
         match self {
-            LifeCycle::WidgetAdded | LifeCycle::Internal(_) => true,
+            LifeCycle::WidgetAdded{..} | LifeCycle::Internal(_) | LifeCycle::EnabledChanged(_) => true,
             LifeCycle::Size(_) | LifeCycle::HotChanged(_) | LifeCycle::FocusChanged(_) => false,
         }
     }

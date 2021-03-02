@@ -477,7 +477,7 @@ impl<T: Data> Widget<T> for Label<T> {
     fn event(&mut self, _ctx: &mut EventCtx, _event: &Event, _data: &mut T, _env: &Env) {}
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
-        if matches!(event, LifeCycle::WidgetAdded) {
+        if matches!(event, LifeCycle::WidgetAdded{..}) {
             self.text.resolve(data, env);
             self.text_should_be_updated = false;
             self.label
@@ -513,7 +513,7 @@ impl<T: Data> Widget<T> for Label<T> {
 impl<T: TextStorage> Widget<T> for RawLabel<T> {
     fn event(&mut self, _ctx: &mut EventCtx, _event: &Event, _data: &mut T, _env: &Env) {}
     fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, _env: &Env) {
-        if matches!(event, LifeCycle::WidgetAdded) {
+        if matches!(event, LifeCycle::WidgetAdded{..}) {
             self.layout.set_text(data.to_owned());
         }
     }
