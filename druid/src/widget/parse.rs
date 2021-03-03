@@ -48,7 +48,7 @@ impl<T: FromStr + Display + Data, W: Widget<String>> Widget<Option<T>> for Parse
         data: &Option<T>,
         env: &Env,
     ) {
-        if let LifeCycle::WidgetAdded{..} = event {
+        if let LifeCycle::WidgetAdded { .. } = event {
             if let Some(data) = data {
                 self.state = data.to_string();
             }

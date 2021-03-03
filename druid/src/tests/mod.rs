@@ -356,7 +356,12 @@ fn simple_lifecyle() {
     let widget = SizedBox::empty().record(&record);
     Harness::create_simple(true, widget, |harness| {
         harness.send_initial_events();
-        assert!(matches!(record.next(), Record::L(LifeCycle::WidgetAdded)));
+        assert!(matches!(
+            record.next(),
+            Record::L(LifeCycle::WidgetAdded {
+                initially_enabled: true
+            })
+        ));
         assert!(matches!(record.next(), Record::E(Event::WindowConnected)));
         assert!(matches!(record.next(), Record::E(Event::WindowSize(_))));
         assert!(record.is_empty());
@@ -380,7 +385,12 @@ fn adding_child_lifecycle() {
     Harness::create_simple(String::new(), widget, |harness| {
         harness.send_initial_events();
 
-        assert!(matches!(record.next(), Record::L(LifeCycle::WidgetAdded)));
+        assert!(matches!(
+            record.next(),
+            Record::L(LifeCycle::WidgetAdded {
+                initially_enabled: true
+            })
+        ));
         assert!(matches!(record.next(), Record::E(Event::WindowConnected)));
         assert!(record.is_empty());
 
@@ -392,7 +402,9 @@ fn adding_child_lifecycle() {
 
         assert!(matches!(
             record_new_child.next(),
-            Record::L(LifeCycle::WidgetAdded)
+            Record::L(LifeCycle::WidgetAdded {
+                initially_enabled: true
+            })
         ));
         assert!(record_new_child.is_empty());
     })

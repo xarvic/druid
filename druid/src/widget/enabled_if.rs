@@ -1,4 +1,7 @@
-use crate::{WidgetPod, Env, Widget, Data, EventCtx, LifeCycle, PaintCtx, BoxConstraints, LifeCycleCtx, LayoutCtx, Event, UpdateCtx, Point, Size};
+use crate::{
+    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx,
+    Point, Size, UpdateCtx, Widget, WidgetPod,
+};
 
 /// A container which enables its content only if the provided closure returned `true` for the given
 /// Data and Env.
@@ -33,12 +36,19 @@ impl<T: Data, W: Widget<T>> Widget<T> for EnabledIf<T, W> {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
-        if let LifeCycle::WidgetAdded {..} = event {
+        if let LifeCycle::WidgetAdded { .. } = event {
             let enabled = (self.enabled_if)(data, env);
 
             if !enabled {
                 ctx.set_disabled_initially();
-                self.inner.lifecycle(ctx, &LifeCycle::WidgetAdded {initially_enabled: false}, data, env);
+                self.inner.lifecycle(
+                    ctx,
+                    &LifeCycle::WidgetAdded {
+                        initially_enabled: false,
+                    },
+                    data,
+                    env,
+                );
                 return;
             }
         }

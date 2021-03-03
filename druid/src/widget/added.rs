@@ -54,7 +54,7 @@ impl<T: Data, W: Widget<T>> Controller<T, W> for Added<T, W> {
         data: &T,
         env: &Env,
     ) {
-        if let crate::LifeCycle::WidgetAdded{..} = event {
+        if let crate::LifeCycle::WidgetAdded { .. } = event {
             (self.action)(child, ctx, data, env);
         }
         child.lifecycle(ctx, event, data, env)

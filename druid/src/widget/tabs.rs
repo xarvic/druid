@@ -368,7 +368,7 @@ impl<TP: TabsPolicy> Widget<TabsState<TP>> for TabBar<TP> {
         data: &TabsState<TP>,
         env: &Env,
     ) {
-        if let LifeCycle::WidgetAdded{..} = event {
+        if let LifeCycle::WidgetAdded { .. } = event {
             self.ensure_tabs(data);
             ctx.children_changed();
             ctx.request_layout();
@@ -598,7 +598,7 @@ impl<TP: TabsPolicy> Widget<TabsState<TP>> for TabsBody<TP> {
         data: &TabsState<TP>,
         env: &Env,
     ) {
-        if let LifeCycle::WidgetAdded{..} = event {
+        if let LifeCycle::WidgetAdded { .. } = event {
             self.make_tabs(data);
             ctx.children_changed();
             ctx.request_layout();
@@ -953,7 +953,7 @@ impl<TP: TabsPolicy> Widget<TP::Input> for Tabs<TP> {
         data: &TP::Input,
         env: &Env,
     ) {
-        if let LifeCycle::WidgetAdded{..} = event {
+        if let LifeCycle::WidgetAdded { .. } = event {
             let content = std::mem::replace(&mut self.content, TabsContent::Swapping);
 
             self.content = match content {

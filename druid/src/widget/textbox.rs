@@ -494,7 +494,7 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
         match event {
-            LifeCycle::WidgetAdded{..} => {
+            LifeCycle::WidgetAdded { .. } => {
                 ctx.register_for_focus();
                 self.editor.set_text(data.to_owned());
                 self.editor.rebuild_if_needed(ctx.text(), env);
@@ -821,7 +821,7 @@ impl<T: Data> Widget<T> for ValueTextBox<T> {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
-        if let LifeCycle::WidgetAdded{..} = event {
+        if let LifeCycle::WidgetAdded { .. } = event {
             self.buffer = self.formatter.format(data);
             self.old_buffer = self.buffer.clone();
         }

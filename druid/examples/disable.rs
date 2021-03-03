@@ -1,5 +1,5 @@
-use druid::{Widget, Data, Lens, AppLauncher, WindowDesc, WidgetExt};
-use druid::widget::{Flex, TextBox, Button, Label, Checkbox, Switch, Slider, Stepper, Radio};
+use druid::widget::{Button, Checkbox, Flex, Label, Radio, Slider, Stepper, Switch, TextBox};
+use druid::{AppLauncher, Data, Lens, Widget, WidgetExt, WindowDesc};
 use piet_common::UnitPoint;
 
 #[derive(Clone, Data, Lens)]
@@ -13,16 +13,9 @@ struct AppData {
 
 fn element(lens: impl Lens<AppData, String> + 'static, disabled: bool) -> Box<dyn Widget<AppData>> {
     if disabled {
-        Box::new(
-            TextBox::new()
-                .lens(lens)
-                .enable_if(|data, _|data.enabled)
-        )
+        Box::new(TextBox::new().lens(lens).enable_if(|data, _| data.enabled))
     } else {
-        Box::new(
-            TextBox::new()
-                .lens(lens)
-        )
+        Box::new(TextBox::new().lens(lens))
     }
 }
 
@@ -37,20 +30,20 @@ fn widget() -> impl Widget<AppData> {
     let counter = Flex::row()
         .with_child(
             Button::new("-")
-                .on_click(|_, data: &mut f64, _|*data = (*data - 1.0).max(0.0))
-                .enable_if(|data, _|*data > 0.0)
-                .lens(AppData::count)
+                .on_click(|_, data: &mut f64, _| *data = (*data - 1.0).max(0.0))
+                .enable_if(|data, _| *data > 0.0)
+                .lens(AppData::count),
         )
         .with_default_spacer()
-        .with_child(
-            Label::dynamic(|data: &AppData, _|((data.count * 100.0).round() / 100.0).to_string())
-        )
+        .with_child(Label::dynamic(|data: &AppData, _| {
+            ((data.count * 100.0).round() / 100.0).to_string()
+        }))
         .with_default_spacer()
         .with_child(
             Button::new("+")
-                .on_click(|_, data: &mut f64, _|*data = (*data + 1.0).min(5.0))
-                .enable_if(|data, _|*data < 5.0)
-                .lens(AppData::count)
+                .on_click(|_, data: &mut f64, _| *data = (*data + 1.0).min(5.0))
+                .enable_if(|data, _| *data < 5.0)
+                .lens(AppData::count),
         );
 
     Flex::column()
@@ -60,42 +53,45 @@ fn widget() -> impl Widget<AppData> {
         .with_default_spacer()
         .with_child(row(false))
         .with_default_spacer()
-        .with_child(Switch::new()
-                        .lens(AppData::state)
-                        .enable_if(|data: &AppData, _|data.enabled)
-        )
-        .with_default_spacer()
-        .with_child(Radio::new("True", true)
-            .lens(AppData::state)
-            .enable_if(|data: &AppData, _|data.enabled)
-        )
-        .with_default_spacer()
-        .with_child(Radio::new("False", false)
-            .lens(AppData::state)
-            .enable_if(|data: &AppData, _|data.enabled)
-        )
-        .with_default_spacer()
-        .with_child(Stepper::new()
-            .with_range(0.0, 5.0)
-            .lens(AppData::count)
-            .enable_if(|data: &AppData, _|data.enabled)
-        )
-        .with_default_spacer()
-        .with_child(Checkbox::new("Data")
-            .lens(AppData::state)
-            .enable_if(|data: &AppData, _|data.enabled)
-        )
-        .with_default_spacer()
-        .with_child(Slider::new()
-            .with_range(0.0, 5.0)
-            .lens(AppData::count)
-            .enable_if(|data: &AppData, _|data.enabled)
+        .with_child(
+            Switch::new()
+                .lens(AppData::state)
+                .enable_if(|data: &AppData, _| data.enabled),
         )
         .with_default_spacer()
         .with_child(
-            Checkbox::new("Controls enabled")
-                .lens(AppData::enabled)
+            Radio::new("True", true)
+                .lens(AppData::state)
+                .enable_if(|data: &AppData, _| data.enabled),
         )
+        .with_default_spacer()
+        .with_child(
+            Radio::new("False", false)
+                .lens(AppData::state)
+                .enable_if(|data: &AppData, _| data.enabled),
+        )
+        .with_default_spacer()
+        .with_child(
+            Stepper::new()
+                .with_range(0.0, 5.0)
+                .lens(AppData::count)
+                .enable_if(|data: &AppData, _| data.enabled),
+        )
+        .with_default_spacer()
+        .with_child(
+            Checkbox::new("Data")
+                .lens(AppData::state)
+                .enable_if(|data: &AppData, _| data.enabled),
+        )
+        .with_default_spacer()
+        .with_child(
+            Slider::new()
+                .with_range(0.0, 5.0)
+                .lens(AppData::count)
+                .enable_if(|data: &AppData, _| data.enabled),
+        )
+        .with_default_spacer()
+        .with_child(Checkbox::new("Controls enabled").lens(AppData::enabled))
         .with_default_spacer()
         .with_default_spacer()
         .with_child(counter)
@@ -103,16 +99,16 @@ fn widget() -> impl Widget<AppData> {
 }
 
 fn main() {
-    let window = WindowDesc::new(widget())
-        .title("Disable Test");
+    let window = WindowDesc::new(widget()).title("Disable Test");
 
     AppLauncher::with_window(window)
         .use_env_tracing()
-        .launch(AppData{
+        .launch(AppData {
             left: String::new(),
             right: String::from("test"),
             state: false,
             enabled: true,
             count: 0.0,
-        }).unwrap();
+        })
+        .unwrap();
 }

@@ -585,13 +585,18 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
         }
     }
 
-    fn update_enabled(&mut self, parent: &mut WidgetState, context: &mut ContextState, data: &T, env: &Env) {
+    fn update_enabled(
+        &mut self,
+        parent: &mut WidgetState,
+        context: &mut ContextState,
+        data: &T,
+        env: &Env,
+    ) {
         let was_enabled = self.state.is_enabled();
 
         self.state.set_enabled = self.state.new_enabled;
 
         if self.state.is_enabled() != was_enabled {
-
             if !self.state.focus_chain.is_empty() {
                 //Adding or removing elements from the focus chain
                 parent.children_changed = true;
@@ -926,7 +931,14 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
                     if self.old_data.is_none() {
                         let enabled = self.state.is_enabled();
 
-                        self.lifecycle(ctx, &LifeCycle::WidgetAdded{initially_enabled: enabled}, data, env);
+                        self.lifecycle(
+                            ctx,
+                            &LifeCycle::WidgetAdded {
+                                initially_enabled: enabled,
+                            },
+                            data,
+                            env,
+                        );
                         return;
                     } else {
                         if self.state.children_changed {
@@ -981,7 +993,7 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
                     true
                 }
             },
-            LifeCycle::WidgetAdded{initially_enabled} => {
+            LifeCycle::WidgetAdded { initially_enabled } => {
                 assert!(self.old_data.is_none());
 
                 self.old_data = Some(data.clone());
@@ -1037,7 +1049,8 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
 
         // we need to (re)register children in case of one of the following events
         match event {
-            LifeCycle::WidgetAdded{..} | LifeCycle::Internal(InternalLifeCycle::RouteWidgetAdded) => {
+            LifeCycle::WidgetAdded { .. }
+            | LifeCycle::Internal(InternalLifeCycle::RouteWidgetAdded) => {
                 self.state.children_changed = false;
                 ctx.widget_state.children = ctx.widget_state.children.union(self.state.children);
 
@@ -1328,7 +1341,14 @@ mod tests {
 
         let env = Env::default();
 
-        widget.lifecycle(&mut ctx, &LifeCycle::WidgetAdded, &1, &env);
+        widget.lifecycle(
+            &mut ctx,
+            &LifeCycle::WidgetAdded {
+                initially_enabled: true,
+            },
+            &1,
+            &env,
+        );
         assert!(ctx.widget_state.children.may_contain(&ID_1));
         assert!(ctx.widget_state.children.may_contain(&ID_2));
         assert!(ctx.widget_state.children.may_contain(&ID_3));
