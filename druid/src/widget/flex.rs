@@ -633,6 +633,7 @@ impl<T: Data> Flex<T> {
     ///
     /// ```
     /// use druid::widget::{Flex, FlexParams, Label, Slider, CrossAxisAlignment};
+    /// use druid::Widget;
     ///
     /// let modify = true;
     ///
