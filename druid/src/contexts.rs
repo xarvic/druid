@@ -272,12 +272,29 @@ impl_context_method!(
             self.widget_state.has_focus
         }
 
+        /// The disabled status of a widget.
+        ///
+        /// The widget can still be disabled if this value is `false`, use [`is_enabled`] to check if
+        /// the widget is currently enabled.
+        ///
+        /// If the value is `true` this widget will stay disabled at least until [`EventCtx::set_enabled`]
+        /// or [`UpdateCtx::set_enabled`] is called.
+        ///
+        /// [`is_enabled`]: #method.is_enabled
+        /// [`EventCtx::set_enabled`]: struct.EventCtx.html#method.set_enabled
+        /// [`UpdateCtx::set_enabled`]: struct.LifeCycleCtx.html#method.set_enabled
+        pub fn is_set_disabled(&self) -> bool {
+            !self.widget_state.set_enabled
+        }
+
         /// The (tree) disabled status of a widget.
         ///
         /// Returns `true` ìf this widget and all of its ancestors are enabled.
         /// If the value is `false` the widget will not receive most of the events.
         ///
-        /// To check if this specific widget wanted to be disabled use [`is_set_diabled`]
+        /// To check if this specific widget wanted to be disabled use [`is_set_disabled`]
+        ///
+        /// [`is_set_disabled`]: #method.is_set_disabled
         //TODO: document which events are affected
         pub fn is_enabled(&self) -> bool {
             self.widget_state.is_enabled()
@@ -325,26 +342,13 @@ impl_context_method!(EventCtx<'_, '_>, UpdateCtx<'_, '_>, {
         self.widget_state.cursor_change = CursorChange::Default;
     }
 
-    /// The disabled status of a widget.
+    /// Sets the enabled state of this widget (see: [`EventCtx::is_set_disabled`] and [`UpdateCtx::is_set_disabled`]).
     ///
-    /// The widget can still be disabled if this value is `false`, use [`is_enabled`] to check if
-    /// the widget is currently enabled.
-    ///
-    /// If the value is `true` this widget will stay disabled at least until [`EventCtx::set_enabled`]
-    /// or [`UpdateCtx::set_enabled`] is called.
-    ///
-    /// [`is_enabled`]: #method.is_enabled
-    /// [`EventCtx::set_enabled`]: struct.EventCtx.html#method.set_enabled
-    /// [`UpdateCtx::set_enabled`]: struct.LifeCycleCtx.html#method.set_enabled
-    pub fn is_set_disabled(&self) -> bool {
-        !self.widget_state.set_enabled
-    }
-
-    /// Sets the enabled state of this widget (see: [`is_set_disabled`]).
-    ///
-    /// To check if if this widget is currently enabled use [`is_enabled`].
-    /// [`is_enabled`]: #method.is_enabled
-    /// [`is_set_disabled`]: #method.is_set_disabled
+    /// To check if if this widget is currently enabled use [`EventCtx::is_enabled`] and [`UpdateCtx::is_enabled`].
+    /// [`EventCtx::is_enabled`]: EventCtx::is_enabled
+    /// [`UpdateCtx::is_enabled`]: UpdateCtx::is_enabled
+    /// [`EventCtx::is_set_disabled`]: EventCtx::is_set_disabled
+    /// [`UpdateCtx::is_set_disabled`]: UpdateCtx::is_set_disabled
     pub fn set_enabled(&mut self, enabled: bool) {
         self.widget_state.new_enabled = enabled;
     }

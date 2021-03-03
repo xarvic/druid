@@ -473,7 +473,7 @@ impl<T: Data> Flex<T> {
     /// This function takes a child widget and [`FlexParams`]; importantly
     /// you can pass in a float as your [`FlexParams`] in most cases.
     ///
-    /// For the non-builder varient, see [`add_flex_child`].
+    /// For the non-builder varient, see [`add_boxed_flex_child`].
     ///
     /// # Examples
     ///
@@ -485,7 +485,7 @@ impl<T: Data> Flex<T> {
     /// let widget = if modify {
     ///     Box::new(Slider::new())
     /// } else {
-    ///     Box::new(Label::dynamic(|data: &f64|data.to_string()))
+    ///     Box::new(Label::dynamic(|data: &f64, _|data.to_string()))
     /// };
     ///
     /// let my_row = Flex::row()
@@ -638,7 +638,7 @@ impl<T: Data> Flex<T> {
     /// let widget = if modify {
     ///     Box::new(Slider::new())
     /// } else {
-    ///     Box::new(Label::dynamic(|data: &f64|data.to_string()))
+    ///     Box::new(Label::dynamic(|data: &f64, _| data.to_string()))
     /// };
     ///
     ///
