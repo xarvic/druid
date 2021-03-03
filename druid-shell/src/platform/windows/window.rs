@@ -49,6 +49,9 @@ use winapi::um::winuser::*;
 use winapi::Interface;
 use wio::com::ComPtr;
 
+#[cfg(feature = "raw-win-handle")]
+use raw_window_handle::{windows::WindowsHandle, HasRawWindowHandle, RawWindowHandle};
+
 use piet_common::d2d::{D2DFactory, DeviceContext};
 use piet_common::dwrite::DwriteFactory;
 
@@ -163,6 +166,26 @@ enum DeferredOp {
 pub struct WindowHandle {
     dwrite_factory: DwriteFactory,
     state: Weak<WindowState>,
+}
+
+#[cfg(feature = "raw-win-handle")]
+unsafe impl HasRawWindowHandle for WindowHandle {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        if let Some(hwnd) = self.get_hwnd() {
+            let handle = WindowsHandle {
+                hwnd: hwnd as *mut core::ffi::c_void,
+                hinstance: unsafe {
+                    winapi::um::libloaderapi::GetModuleHandleW(0 as winapi::um::winnt::LPCWSTR)
+                        as *mut core::ffi::c_void
+                },
+                ..WindowsHandle::empty()
+            };
+            RawWindowHandle::Windows(handle)
+        } else {
+            error!("Cannot retrieved HWND for window.");
+            RawWindowHandle::Windows(WindowsHandle::empty())
+        }
+    }
 }
 
 /// A handle that can get used to schedule an idle handler. Note that
@@ -1653,11 +1676,16 @@ unsafe fn create_window(
 
 impl Cursor {
     fn get_hcursor(&self) -> HCURSOR {
+        #[allow(deprecated)]
         let name = match self {
             Cursor::Arrow => IDC_ARROW,
             Cursor::IBeam => IDC_IBEAM,
+            Cursor::Pointer => IDC_HAND,
             Cursor::Crosshair => IDC_CROSS,
-            Cursor::OpenHand => IDC_HAND,
+            Cursor::OpenHand => {
+                warn!("Cursor::OpenHand not available on windows");
+                IDC_ARROW
+            }
             Cursor::NotAllowed => IDC_NO,
             Cursor::ResizeLeftRight => IDC_SIZEWE,
             Cursor::ResizeUpDown => IDC_SIZENS,

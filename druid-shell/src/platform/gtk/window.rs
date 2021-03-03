@@ -33,6 +33,9 @@ use gtk::prelude::*;
 use gtk::{AccelGroup, ApplicationWindow, DrawingArea, SettingsExt};
 use tracing::{error, warn};
 
+#[cfg(feature = "raw-win-handle")]
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+
 use crate::kurbo::{Insets, Point, Rect, Size, Vec2};
 use crate::piet::{Piet, PietText, RenderContext};
 
@@ -93,6 +96,15 @@ pub struct WindowHandle {
     pub(crate) state: Weak<WindowState>,
     // Ensure that we don't implement Send, because it isn't actually safe to send the WindowState.
     marker: std::marker::PhantomData<*const ()>,
+}
+
+#[cfg(feature = "raw-win-handle")]
+unsafe impl HasRawWindowHandle for WindowHandle {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        error!("HasRawWindowHandle trait not implemented for gtk.");
+        // GTK is not a platform, and there's no empty generic handle. Pick XCB randomly as fallback.
+        RawWindowHandle::Xcb(XcbHandle::empty())
+    }
 }
 
 /// Operations that we defer in order to avoid re-entrancy. See the documentation in the windows
@@ -1176,10 +1188,12 @@ fn make_gdk_cursor(cursor: &Cursor, gdk_window: &gdk::Window) -> Option<gdk::Cur
     } else {
         gdk::Cursor::from_name(
             &gdk_window.get_display(),
+            #[allow(deprecated)]
             match cursor {
                 // cursor name values from https://www.w3.org/TR/css-ui-3/#cursor
                 Cursor::Arrow => "default",
                 Cursor::IBeam => "text",
+                Cursor::Pointer => "pointer",
                 Cursor::Crosshair => "crosshair",
                 Cursor::OpenHand => "grab",
                 Cursor::NotAllowed => "not-allowed",
