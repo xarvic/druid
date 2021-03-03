@@ -479,13 +479,14 @@ impl<T: Data> Flex<T> {
     ///
     /// ```
     /// use druid::widget::{Flex, FlexParams, Label, Slider, CrossAxisAlignment};
+    /// use druid::Widget;
     ///
     /// let modify = true;
     ///
     /// let widget = if modify {
-    ///     Box::new(Slider::new())
+    ///     Box::new(Slider::new()) as Box<dyn Widget<f64>>
     /// } else {
-    ///     Box::new(Label::dynamic(|data: &f64, _|data.to_string()))
+    ///     Box::new(Label::dynamic(|data: &f64, _|data.to_string())) as Box<dyn Widget<f64>>
     /// };
     ///
     /// let my_row = Flex::row()
@@ -636,9 +637,9 @@ impl<T: Data> Flex<T> {
     /// let modify = true;
     ///
     /// let widget = if modify {
-    ///     Box::new(Slider::new())
+    ///     Box::new(Slider::new()) as Box<dyn Widget<f64>>
     /// } else {
-    ///     Box::new(Label::dynamic(|data: &f64, _| data.to_string()))
+    ///     Box::new(Label::dynamic(|data: &f64, _| data.to_string())) as Box<dyn Widget<f64>>
     /// };
     ///
     ///
