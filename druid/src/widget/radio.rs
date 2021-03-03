@@ -64,13 +64,15 @@ impl<T: Data + PartialEq> Widget<T> for Radio<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, _env: &Env) {
         match event {
             Event::MouseDown(_) => {
-                ctx.set_active(true);
-                ctx.request_paint();
+                if ctx.is_enabled() {
+                    ctx.set_active(true);
+                    ctx.request_paint();
+                }
             }
             Event::MouseUp(_) => {
                 if ctx.is_active() {
                     ctx.set_active(false);
-                    if ctx.is_hot() {
+                    if ctx.is_hot() && ctx.is_enabled() {
                         *data = self.variant.clone();
                     }
                     ctx.request_paint();
@@ -82,7 +84,7 @@ impl<T: Data + PartialEq> Widget<T> for Radio<T> {
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
         self.child_label.lifecycle(ctx, event, data, env);
-        if let LifeCycle::HotChanged(_) = event {
+        if let LifeCycle::HotChanged(_) | LifeCycle::EnabledChanged(_) = event {
             ctx.request_paint();
         }
     }
@@ -126,7 +128,7 @@ impl<T: Data + PartialEq> Widget<T> for Radio<T> {
 
         ctx.fill(circle, &background_gradient);
 
-        let border_color = if ctx.is_hot() {
+        let border_color = if ctx.is_hot() && ctx.is_enabled() {
             env.get(theme::BORDER_LIGHT)
         } else {
             env.get(theme::BORDER_DARK)
@@ -138,7 +140,13 @@ impl<T: Data + PartialEq> Widget<T> for Radio<T> {
         if *data == self.variant {
             let inner_circle = Circle::new((size / 2., size / 2.), INNER_CIRCLE_RADIUS);
 
-            ctx.fill(inner_circle, &env.get(theme::LABEL_COLOR));
+            let color = if ctx.is_enabled() {
+                env.get(theme::LABEL_COLOR)
+            } else {
+                env.get(theme::FOREGROUND_DARK)
+            };
+
+            ctx.fill(inner_circle, &color);
         }
 
         // Paint the text label

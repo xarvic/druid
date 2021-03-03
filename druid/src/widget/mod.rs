@@ -72,6 +72,7 @@ pub use common::FillStrat;
 pub use container::Container;
 pub use controller::{Controller, ControllerHost};
 pub use either::Either;
+pub use enabled_if::EnabledIf;
 pub use env_scope::EnvScope;
 pub use flex::{Axis, CrossAxisAlignment, Flex, FlexParams, MainAxisAlignment};
 pub use identity_wrapper::IdentityWrapper;

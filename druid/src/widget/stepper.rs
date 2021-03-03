@@ -149,14 +149,24 @@ impl Widget<f64> for Stepper {
             (env.get(theme::BUTTON_DARK), env.get(theme::BUTTON_LIGHT)),
         );
 
+        let disabled_gradient = LinearGradient::new(
+            UnitPoint::TOP,
+            UnitPoint::BOTTOM,
+            (env.get(theme::BACKGROUND_LIGHT), env.get(theme::BACKGROUND_DARK)),
+        );
+
         // draw buttons that are currently triggered as active
-        if self.increase_active {
+        if !ctx.is_enabled() {
+            ctx.fill(increase_button_rect, &disabled_gradient);
+        } else if self.increase_active {
             ctx.fill(increase_button_rect, &active_gradient);
         } else {
             ctx.fill(increase_button_rect, &inactive_gradient);
         };
 
-        if self.decrease_active {
+        if !ctx.is_enabled() {
+            ctx.fill(decrease_button_rect, &disabled_gradient);
+        } else if self.decrease_active && ctx.is_enabled() {
             ctx.fill(decrease_button_rect, &active_gradient);
         } else {
             ctx.fill(decrease_button_rect, &inactive_gradient);
@@ -195,43 +205,59 @@ impl Widget<f64> for Stepper {
 
         match event {
             Event::MouseDown(mouse) => {
-                ctx.set_active(true);
+                if ctx.is_enabled() {
+                    ctx.set_active(true);
 
-                if mouse.pos.y > height / 2. {
-                    self.decrease_active = true;
-                    self.decrement(data);
-                } else {
-                    self.increase_active = true;
-                    self.increment(data);
+                    if mouse.pos.y > height / 2. {
+                        self.decrease_active = true;
+                        self.decrement(data);
+                    } else {
+                        self.increase_active = true;
+                        self.increment(data);
+                    }
+
+                    self.timer_id = ctx.request_timer(STEPPER_REPEAT_DELAY);
+
+                    ctx.request_paint();
                 }
-
-                self.timer_id = ctx.request_timer(STEPPER_REPEAT_DELAY);
-
-                ctx.request_paint();
             }
             Event::MouseUp(_) => {
-                ctx.set_active(false);
+                if ctx.is_active() {
+                    ctx.set_active(false);
 
-                self.decrease_active = false;
-                self.increase_active = false;
-                self.timer_id = TimerToken::INVALID;
+                    if ctx.is_enabled() {
+                        self.decrease_active = false;
+                        self.increase_active = false;
+                        self.timer_id = TimerToken::INVALID;
+                    }
 
-                ctx.request_paint();
+                    ctx.request_paint();
+                }
             }
             Event::Timer(id) if *id == self.timer_id => {
-                if self.increase_active {
-                    self.increment(data);
+                if ctx.is_enabled() {
+                    if self.increase_active {
+                        self.increment(data);
+                    }
+                    if self.decrease_active {
+                        self.decrement(data);
+                    }
+                    self.timer_id = ctx.request_timer(STEPPER_REPEAT);
+                } else {
+                    self.increase_active = false;
+                    self.decrease_active = false;
+                    self.timer_id = TimerToken::INVALID;
                 }
-                if self.decrease_active {
-                    self.decrement(data);
-                }
-                self.timer_id = ctx.request_timer(STEPPER_REPEAT);
             }
             _ => (),
         }
     }
 
-    fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, _event: &LifeCycle, _data: &f64, _env: &Env) {}
+    fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, _data: &f64, _env: &Env) {
+        if let LifeCycle::EnabledChanged(_) = event {
+            ctx.request_paint();
+        }
+    }
 
     fn update(&mut self, ctx: &mut UpdateCtx, old_data: &f64, data: &f64, _env: &Env) {
         if (*data - old_data).abs() > EPSILON {

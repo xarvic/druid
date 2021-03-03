@@ -96,14 +96,16 @@ impl Widget<bool> for Switch {
 
         match event {
             Event::MouseDown(_) => {
-                ctx.set_active(true);
-                ctx.request_paint();
+                if ctx.is_enabled() {
+                    ctx.set_active(true);
+                    ctx.request_paint();
+                }
             }
             Event::MouseUp(_) => {
                 if self.knob_dragged {
                     // toggle value when dragging if knob has been moved far enough
                     *data = self.knob_pos.x > switch_width / 2.;
-                } else if ctx.is_active() {
+                } else if ctx.is_active() && ctx.is_enabled() {
                     // toggle value on click
                     *data = !*data;
                 }
@@ -116,8 +118,12 @@ impl Widget<bool> for Switch {
             }
             Event::MouseMove(mouse) => {
                 if ctx.is_active() {
-                    self.knob_pos.x = mouse.pos.x.min(on_pos).max(off_pos);
-                    self.knob_dragged = true;
+                    if ctx.is_enabled() {
+                        self.knob_pos.x = mouse.pos.x.min(on_pos).max(off_pos);
+                        self.knob_dragged = true;
+                    } else {
+                        ctx.set_active(false);
+                    }
                 }
                 if ctx.is_hot() {
                     self.knob_hovered = self.knob_hit_test(knob_size, mouse.pos)
@@ -159,6 +165,12 @@ impl Widget<bool> for Switch {
         if matches!(event, LifeCycle::WidgetAdded{..}) {
             self.on_text.rebuild_if_needed(ctx.text(), env);
             self.off_text.rebuild_if_needed(ctx.text(), env);
+        }
+
+        if let LifeCycle::EnabledChanged(_) = event {
+            self.knob_dragged = false;
+            self.animation_in_progress = true;
+            ctx.request_anim_frame();
         }
     }
 
@@ -237,31 +249,37 @@ impl Widget<bool> for Switch {
         let is_active = ctx.is_active();
         let is_hovered = self.knob_hovered;
 
-        let normal_knob_gradient = LinearGradient::new(
-            UnitPoint::TOP,
-            UnitPoint::BOTTOM,
-            (
-                env.get(theme::FOREGROUND_LIGHT),
-                env.get(theme::FOREGROUND_DARK),
-            ),
-        );
-        let flipped_knob_gradient = LinearGradient::new(
-            UnitPoint::TOP,
-            UnitPoint::BOTTOM,
-            (
-                env.get(theme::FOREGROUND_DARK),
-                env.get(theme::FOREGROUND_LIGHT),
-            ),
-        );
-
-        let knob_gradient = if is_active {
-            flipped_knob_gradient
+        let knob_gradient = if !ctx.is_enabled() {
+            LinearGradient::new(
+                UnitPoint::TOP,
+                UnitPoint::BOTTOM,
+                (
+                    env.get(theme::BACKGROUND_LIGHT),
+                    env.get(theme::BACKGROUND_DARK),
+                ),
+            )
+        } else if is_active {
+            LinearGradient::new(
+                UnitPoint::TOP,
+                UnitPoint::BOTTOM,
+                (
+                    env.get(theme::FOREGROUND_DARK),
+                    env.get(theme::FOREGROUND_LIGHT),
+                ),
+            )
         } else {
-            normal_knob_gradient
+            LinearGradient::new(
+                UnitPoint::TOP,
+                UnitPoint::BOTTOM,
+                (
+                    env.get(theme::FOREGROUND_LIGHT),
+                    env.get(theme::FOREGROUND_DARK),
+                ),
+            )
         };
 
         // paint the border
-        let border_color = if is_hovered || is_active {
+        let border_color = if (is_hovered || is_active) && ctx.is_enabled() {
             env.get(theme::FOREGROUND_LIGHT)
         } else {
             env.get(theme::FOREGROUND_DARK)

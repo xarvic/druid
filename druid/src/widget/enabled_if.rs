@@ -1,17 +1,24 @@
 use crate::{WidgetPod, Env, Widget, Data, EventCtx, LifeCycle, PaintCtx, BoxConstraints, LifeCycleCtx, LayoutCtx, Event, UpdateCtx, Point, Size};
 
+/// A container which enables its content only if the provided closure returned `true` for the given
+/// Data and Env.
 pub struct EnabledIf<T, W> {
     inner: WidgetPod<T, W>,
     enabled_if: Box<dyn Fn(&T, &Env) -> bool>,
 }
 
 impl<T: Data, W: Widget<T>> EnabledIf<T, W> {
+    /// Constructs a new EnabledIf container
+    ///
+    /// with a closure to decide if the inner widget should be enabled
     pub fn new(inner: W, enabled_if: impl Fn(&T, &Env) -> bool + 'static) -> Self {
         EnabledIf {
             inner: WidgetPod::new(inner),
             enabled_if: Box::new(enabled_if),
         }
     }
+    /// Constructs a new EnabledIf container from an already boxed widget
+    /// with a closure to decide if the inner widget should be enabled
     pub fn boxed(inner: W, enabled_if: Box<dyn Fn(&T, &Env) -> bool>) -> Self {
         EnabledIf {
             inner: WidgetPod::new(inner),

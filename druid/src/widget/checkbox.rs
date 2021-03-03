@@ -42,13 +42,15 @@ impl Widget<bool> for Checkbox {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut bool, _env: &Env) {
         match event {
             Event::MouseDown(_) => {
-                ctx.set_active(true);
-                ctx.request_paint();
+                if ctx.is_enabled() {
+                    ctx.set_active(true);
+                    ctx.request_paint();
+                }
             }
             Event::MouseUp(_) => {
                 if ctx.is_active() {
                     ctx.set_active(false);
-                    if ctx.is_hot() {
+                    if ctx.is_hot() && ctx.is_enabled() {
                         if *data {
                             *data = false;
                         } else {
@@ -64,7 +66,7 @@ impl Widget<bool> for Checkbox {
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &bool, env: &Env) {
         self.child_label.lifecycle(ctx, event, data, env);
-        if let LifeCycle::HotChanged(_) = event {
+        if let LifeCycle::HotChanged(_) | LifeCycle::EnabledChanged(_) = event {
             ctx.request_paint();
         }
     }
@@ -112,7 +114,7 @@ impl Widget<bool> for Checkbox {
 
         ctx.fill(rect, &background_gradient);
 
-        let border_color = if ctx.is_hot() {
+        let border_color = if ctx.is_hot() && ctx.is_enabled() {
             env.get(theme::BORDER_LIGHT)
         } else {
             env.get(theme::BORDER_DARK)
@@ -131,7 +133,13 @@ impl Widget<bool> for Checkbox {
                 .line_cap(LineCap::Round)
                 .line_join(LineJoin::Round);
 
-            ctx.stroke_styled(path, &env.get(theme::LABEL_COLOR), 2., &style);
+            let color = if ctx.is_enabled() {
+                env.get(theme::LABEL_COLOR)
+            } else {
+                env.get(theme::FOREGROUND_DARK)
+            };
+
+            ctx.stroke_styled(path, &color, 2., &style);
         }
 
         // Paint the text label
