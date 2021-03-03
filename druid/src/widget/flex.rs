@@ -654,7 +654,7 @@ impl<T: Data> Flex<T> {
         child: Box<dyn Widget<T> + 'static>,
         params: impl Into<FlexParams>,
     ) {
-         let params = params.into();
+        let params = params.into();
         let child = if params.flex == 0.0 {
             Child::Fixed {
                 widget: WidgetPod::new(child),
