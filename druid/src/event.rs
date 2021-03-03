@@ -406,7 +406,7 @@ impl LifeCycle {
     pub fn should_propagate_to_hidden(&self) -> bool {
         match self {
             LifeCycle::Internal(internal) => internal.should_propagate_to_hidden(),
-            LifeCycle::WidgetAdded{ .. } | LifeCycle::EnabledChanged(_) => true,
+            LifeCycle::WidgetAdded { .. } | LifeCycle::EnabledChanged(_) => true,
             LifeCycle::Size(_) | LifeCycle::HotChanged(_) | LifeCycle::FocusChanged(_) => false,
         }
     }
