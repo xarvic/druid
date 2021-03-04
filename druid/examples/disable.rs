@@ -1,6 +1,5 @@
 use druid::widget::{Button, Checkbox, Flex, Label, Radio, Slider, Stepper, Switch, TextBox};
-use druid::{AppLauncher, Data, Lens, Widget, WidgetExt, WindowDesc};
-use piet_common::UnitPoint;
+use druid::{AppLauncher, Data, Lens, Widget, WidgetExt, WindowDesc, UnitPoint};
 
 #[derive(Clone, Data, Lens)]
 struct AppData {
