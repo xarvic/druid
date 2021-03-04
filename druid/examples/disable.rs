@@ -97,7 +97,7 @@ fn widget() -> impl Widget<AppData> {
         .align_horizontal(UnitPoint::CENTER)
 }
 
-fn main() {
+pub fn main() {
     let window = WindowDesc::new(widget()).title("Disable Test");
 
     AppLauncher::with_window(window)
