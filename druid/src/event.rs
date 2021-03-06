@@ -245,16 +245,7 @@ pub enum LifeCycle {
     /// [`LifeCycleCtx::register_child`]: struct.LifeCycleCtx.html#method.register_child
     /// [`WidgetPod`]: struct.WidgetPod.html
     /// [`LifeCycleCtx::register_for_focus`]: struct.LifeCycleCtx.html#method.register_for_focus
-    WidgetAdded {
-        /// The widget is enabled at when it is added. This field can be mostly ignored. You can
-        /// always use [`LifeCycleCtx::is_enabled`] instead.
-        ///
-        /// See [`LifeCycleCtx::set_disabled_initially`].
-        ///
-        /// [`LifeCycleCtx::is_enabled`]: struct.LifeCycleCtx.html#method.is_enabled
-        /// [`LifeCycleCtx::set_disabled_initially`]: struct.LifeCycleCtx.html#method.set_disabled_initially
-        initially_enabled: bool,
-    },
+    WidgetAdded,
     /// Called when the [`Size`] of the widget changes.
     ///
     /// This will be called after [`Widget::layout`], if the [`Size`] returned
@@ -406,7 +397,7 @@ impl LifeCycle {
     pub fn should_propagate_to_hidden(&self) -> bool {
         match self {
             LifeCycle::Internal(internal) => internal.should_propagate_to_hidden(),
-            LifeCycle::WidgetAdded { .. } | LifeCycle::EnabledChanged(_) => true,
+            LifeCycle::WidgetAdded | LifeCycle::EnabledChanged(_) => true,
             LifeCycle::Size(_) | LifeCycle::HotChanged(_) | LifeCycle::FocusChanged(_) => false,
         }
     }

@@ -105,8 +105,8 @@ pub fn main() {
         .launch(AppData {
             left: String::new(),
             right: String::from("test"),
-            state: false,
-            enabled: true,
+            state: true,
+            enabled: false,
             count: 0.0,
         })
         .unwrap();

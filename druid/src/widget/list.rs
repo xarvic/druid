@@ -227,7 +227,7 @@ impl<C: Data, T: ListIter<C>> Widget<T> for List<C> {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
-        if let LifeCycle::WidgetAdded { .. } = event {
+        if let LifeCycle::WidgetAdded = event {
             if self.update_child_count(data, env) {
                 ctx.children_changed();
             }

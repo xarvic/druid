@@ -929,16 +929,7 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
                     // WidgetAdded or in case we were already created
                     // we just pass this event down
                     if self.old_data.is_none() {
-                        let enabled = self.state.is_enabled();
-
-                        self.lifecycle(
-                            ctx,
-                            &LifeCycle::WidgetAdded {
-                                initially_enabled: enabled,
-                            },
-                            data,
-                            env,
-                        );
+                        self.lifecycle(ctx, &LifeCycle::WidgetAdded, data, env);
                         return;
                     } else {
                         if self.state.children_changed {
@@ -993,13 +984,13 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
                     true
                 }
             },
-            LifeCycle::WidgetAdded { initially_enabled } => {
+            LifeCycle::WidgetAdded => {
                 assert!(self.old_data.is_none());
 
                 self.old_data = Some(data.clone());
                 self.env = Some(env.clone());
 
-                self.state.tree_enabled = *initially_enabled;
+                self.state.tree_enabled = ctx.is_enabled();
 
                 true
             }
@@ -1049,8 +1040,7 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
 
         // we need to (re)register children in case of one of the following events
         match event {
-            LifeCycle::WidgetAdded { .. }
-            | LifeCycle::Internal(InternalLifeCycle::RouteWidgetAdded) => {
+            LifeCycle::WidgetAdded | LifeCycle::Internal(InternalLifeCycle::RouteWidgetAdded) => {
                 self.state.children_changed = false;
                 ctx.widget_state.children = ctx.widget_state.children.union(self.state.children);
 
@@ -1341,14 +1331,7 @@ mod tests {
 
         let env = Env::default();
 
-        widget.lifecycle(
-            &mut ctx,
-            &LifeCycle::WidgetAdded {
-                initially_enabled: true,
-            },
-            &1,
-            &env,
-        );
+        widget.lifecycle(&mut ctx, &LifeCycle::WidgetAdded, &1, &env);
         assert!(ctx.widget_state.children.may_contain(&ID_1));
         assert!(ctx.widget_state.children.may_contain(&ID_2));
         assert!(ctx.widget_state.children.may_contain(&ID_3));

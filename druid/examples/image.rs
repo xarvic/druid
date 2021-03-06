@@ -72,7 +72,7 @@ impl Widget<AppState> for Rebuilder {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &AppState, env: &Env) {
-        if let LifeCycle::WidgetAdded { .. } = event {
+        if let LifeCycle::WidgetAdded = event {
             self.rebuild_inner(data);
         }
         self.inner.lifecycle(ctx, event, data, env)

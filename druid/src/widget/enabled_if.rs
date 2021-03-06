@@ -36,20 +36,9 @@ impl<T: Data, W: Widget<T>> Widget<T> for EnabledIf<T, W> {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
-        if let LifeCycle::WidgetAdded { .. } = event {
-            let enabled = (self.enabled_if)(data, env);
-
-            if !enabled {
+        if let LifeCycle::WidgetAdded = event {
+            if !(self.enabled_if)(data, env) {
                 ctx.set_disabled_initially();
-                self.inner.lifecycle(
-                    ctx,
-                    &LifeCycle::WidgetAdded {
-                        initially_enabled: false,
-                    },
-                    data,
-                    env,
-                );
-                return;
             }
         }
         self.inner.lifecycle(ctx, event, data, env);
